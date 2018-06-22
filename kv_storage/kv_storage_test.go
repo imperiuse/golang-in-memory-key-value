@@ -3,9 +3,11 @@ package kv_storage
 import (
 	"testing"
 	"../safemap"
+	"fmt"
 )
 
-func VerySimpleAbstractKVTest(t *testing.T) {
+func TestVerySimpleAbstractKV(t *testing.T) {
+	fmt.Printf("\nTestVerySimpleAbstractKV\n")
 	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
 	pArgs := &Args{Key: "key", Data: "value"}
 	pReply := &Reply{}
@@ -25,13 +27,15 @@ func VerySimpleAbstractKVTest(t *testing.T) {
 	}
 	if err := KeyValueStorage.Get(pArgs, pReply); err != nil {
 		t.Errorf("Error not nil! %v", err.Error())
+	} else {
 		if pReply.ErrNo != NOT_FOUND_KEY {
 			t.Errorf("Error test value != empty interface{}! %v", pReply)
 		}
 	}
 }
 
-func VerySimpleIMKVTest(t *testing.T) {
+func TestVerySimpleIMKV(t *testing.T) {
+	fmt.Printf("\nTestVerySimpleIMKV\n")
 	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
 
 	if PKVE := KeyValueStorage.Storage.Set("key", "value"); PKVE != nil {
@@ -47,10 +51,11 @@ func VerySimpleIMKVTest(t *testing.T) {
 	if PKVE := KeyValueStorage.Storage.Delete("key"); PKVE != nil {
 		t.Errorf("Error not nil! %v", PKVE.ToString())
 	}
-	if value, PKVE := KeyValueStorage.Storage.Get("key"); PKVE != nil {
-		t.Errorf("Error not nil! %v", PKVE.ToString())
-		if value != new(interface{}) {
-			t.Errorf("Error test value != empty interface{}! %v", value)
+	if _, PKVE := KeyValueStorage.Storage.Get("key"); PKVE == nil {
+		t.Errorf("Not err about Not Found Key!")
+	} else {
+		if PKVE.ErrCode != NOT_FOUND_KEY {
+			t.Error("Bad error code found!", PKVE.ErrCode)
 		}
 	}
 }

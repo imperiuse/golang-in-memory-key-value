@@ -63,7 +63,7 @@ type KeyValue struct {
 //                error    ошибка
 func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Set()", "may be interface cast")
-	fmt.Printf("Method: %v ARGS: %v\n", "Set", args.ToString())
+	fmt.Printf("Executing Method: %v; ARGS: %v\n", "Set", args.ToString())
 	var storage Storager = &(*kv).Storage // косвеннно пытаемся пивести к нужному нам интерфейсу,  прямо (*kv.Storage).(Storager)  - не сработает
 	if storage != nil { // если удалось
 		if KVE := storage.Set(args.Key, args.Data); KVE == nil {
@@ -93,7 +93,7 @@ func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 //                error    ошибка
 func (kv *KeyValue) Get(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Get()", "may be interface cast")
-	fmt.Printf("Method: %v ARGS:%v\n", "Get", args.ToString())
+	fmt.Printf("Executing Method: %v; ARGS:%v\n", "Get", args.ToString())
 	var storage Storager = &(*kv).Storage
 	if storage != nil {
 		if data, KVE := storage.Get(args.Key); KVE == nil {
@@ -123,7 +123,7 @@ func (kv *KeyValue) Get(args *Args, reply *Reply) error {
 //                error    ошибка
 func (kv *KeyValue) Delete(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Delete()", "may be interface cast")
-	fmt.Printf("Executing Method: %v ARGS: %v\n", "Del", args.ToString())
+	fmt.Printf("Executing Method: %v; ARGS: %v\n", "Del", args.ToString())
 	var storage Storager = &(*kv).Storage
 	if storage != nil {
 		if KVE := storage.Delete(args.Key); KVE == nil {
