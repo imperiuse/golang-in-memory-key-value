@@ -2,6 +2,7 @@ package safemap
 
 // Реализация Безопасной Map на основе примера из книги Саммерфилда, использую с версии Go 1.6
 
+// Интефейс создан для удобства пользователей библиотеки, описываем все методы доступные для SafeMap
 type SafeMap interface {
 	Each(EachFunc) int
 	Set(interface{}, interface{})
@@ -189,9 +190,10 @@ func (sm safeMap) MultiSet(keys map[interface{}]interface{}) {
 	sm <- commandData{action: mset, items: keys}
 }
 
+// Основная функция (горутина) Диспетчер SafeMap
 func (sm safeMap) run() {
-	store := make(map[interface{}]interface{})
-	for command := range sm {
+	store := make(map[interface{}]interface{})  // хранилище
+	for command := range sm {   // бесконечный цикл, обработка команд
 		switch command.action {
 		case set:
 			store[command.key] = command.value
@@ -232,8 +234,9 @@ func (sm safeMap) run() {
 	}
 }
 
+// "Конструктор" SafeMap
 func New(bufsize int) SafeMap {
 	sm := make(safeMap, bufsize) // тип safeMap chan commandData
-	go sm.run()
-	return sm
+	go sm.run()  // запуск горутины, которая будет в бесконечном цикле разбирать команды формир. методами SafeMap
+	return sm    // возращаем созданный экземпляр
 }
