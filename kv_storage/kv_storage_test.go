@@ -28,7 +28,7 @@ func TestVerySimpleAbstractKV(t *testing.T) {
 	if err := KeyValueStorage.Get(pArgs, pReply); err != nil {
 		t.Errorf("Error not nil! %v", err.Error())
 	} else {
-		if pReply.ErrNo != NOT_FOUND_KEY {
+		if pReply.ErrNo != NotFoundKey {
 			t.Errorf("Error test value != empty interface{}! %v", pReply)
 		}
 	}
@@ -54,7 +54,7 @@ func TestVerySimpleIMKV(t *testing.T) {
 	if _, PKVE := KeyValueStorage.Storage.Get("key"); PKVE == nil {
 		t.Errorf("Not err about Not Found Key!")
 	} else {
-		if PKVE.ErrCode != NOT_FOUND_KEY {
+		if PKVE.ErrCode != NotFoundKey {
 			t.Error("Bad error code found!", PKVE.ErrCode)
 		}
 	}

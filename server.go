@@ -21,19 +21,19 @@ import (
 
 // Красота
 const (
-	RED_COLOR    = "\x1b[31m"
-	GREEN_COLOR  = "\x1b[32m"
-	YELLOW_COLOR = "\x1b[33m"
-	BLUE_COLOR   = "\x1b[34m"
-	RESET_COLOR  = "\x1b[0m"
+	RedColor   = "\x1b[31m"
+	GreenColor = "\x1b[32m"
+	//YELLOW_COLOR = "\x1b[33m"
+	BlueColor  = "\x1b[34m"
+	ResetColor = "\x1b[0m"
 )
 
 // Функция для красивой проверки и отображения ошибки.
 func CheckErrorFunc(err error, f string) {
 	if err != nil {
-		fmt.Printf("[CheckErr %v] %v%v%v%v", f, RED_COLOR, "[Error!]\n", err, RESET_COLOR)
+		fmt.Printf("[CheckErr %v] %v%v%v%v", f, RedColor, "[Error!]\n", err, ResetColor)
 	} else {
-		fmt.Printf("[CheckErr %v] %v%v%v", f, GREEN_COLOR, "[Successful!]\n", RESET_COLOR)
+		fmt.Printf("[CheckErr %v] %v%v%v", f, GreenColor, "[Successful!]\n", ResetColor)
 	}
 }
 
@@ -83,10 +83,10 @@ func main() {
 	}
 	err = json.Unmarshal(fileSettings, &Settings)
 	if err != nil {
-		fmt.Printf("[Settings unmarshall from %v%v%v] [%vError!%v]\n", BLUE_COLOR, *pathConfig, RESET_COLOR, RED_COLOR, RESET_COLOR)
+		fmt.Printf("[Settings unmarshall from %v%v%v] [%vError!%v]\n", BlueColor, *pathConfig, ResetColor, RedColor, ResetColor)
 		os.Exit(2)
 	} else {
-		fmt.Printf("[Settings unmarshall from %v%v%v] [%vSuccessful!%v]\n", BLUE_COLOR, *pathConfig, RESET_COLOR, GREEN_COLOR, RESET_COLOR)
+		fmt.Printf("[Settings unmarshall from %v%v%v] [%vSuccessful!%v]\n", BlueColor, *pathConfig, ResetColor, GreenColor, ResetColor)
 	}
 
 	//Обработчик сигналов
@@ -96,7 +96,7 @@ func main() {
 
 	// PID file create
 	if err := pidfile.Write(Settings.Pidfile); err != nil {
-		fmt.Printf("%v Can't create pid file! %v %v \n", RED_COLOR, err, RESET_COLOR)
+		fmt.Printf("%v Can't create pid file! %v %v \n", RedColor, err, ResetColor)
 		os.Exit(1)
 	}
 	defer pidfile.Remove(Settings.Pidfile)
@@ -104,7 +104,7 @@ func main() {
 	// Создаем структуру "Хранилища", а также внутри вложенно инициализиурем канал SafeMap
 	KeyValueStorage := kv_storage.KeyValue{Storage: kv_storage.IMKV{SM: safemap.New(1)}}
 
-	fmt.Printf("Key-Value Storage created %v[Successful]\n%v", GREEN_COLOR, RESET_COLOR)
+	fmt.Printf("Key-Value Storage created %v[Successful]\n%v", GreenColor, ResetColor)
 
 	// Создаем новый экземпляр RPC сервера
 	server := rpc.NewServer()
@@ -118,17 +118,17 @@ func main() {
 	}
 
 	fmt.Printf("Create listener at %v %v[Successful]\n%v",
-		fmt.Sprintf("%v:%v", Settings.Addr, Settings.Port), GREEN_COLOR, RESET_COLOR)
+		fmt.Sprintf("%v:%v", Settings.Addr, Settings.Port), GreenColor, ResetColor)
 
 	for {
 		// Ждем подключения клиента
-		fmt.Printf("Waiting clients ... \n")
+		fmt.Printf("Continue waiting other clients ... \n")
 		if conn, err := listener.Accept(); err != nil {
 			// все плохо
 			fmt.Printf("Accept error: %v\n", err.Error())
 			os.Exit(4)
 		} else { // все хорошо
-			fmt.Printf("%vNew connection established! %v\n", GREEN_COLOR, RESET_COLOR)
+			fmt.Printf("%vConnection from new client established! %v\n", GreenColor, ResetColor)
 			go server.ServeCodec(jsonrpc.NewServerCodec(conn)) // вызов зарегистрированного метода, который хочет клиент
 		}
 	}

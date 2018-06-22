@@ -28,10 +28,10 @@ type KVError struct {
 }
 
 const (
-	NO_ERR        = iota
+	NoErr       = iota
 	PANIC
-	NOT_FOUND_KEY
-	SERVER_ERROR
+	NotFoundKey
+	ServerError
 )
 
 // ErrCode
@@ -63,12 +63,12 @@ type KeyValue struct {
 //                error    ошибка
 func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Set()", "may be interface cast")
-	fmt.Printf("Executing Method: %v; ARGS: %v\n", "Set", args.ToString())
+	fmt.Printf("\nExecuting Method: %v; ARGS: %v\n", "Set", args.ToString())
 	var storage Storager = &(*kv).Storage // косвеннно пытаемся пивести к нужному нам интерфейсу,  прямо (*kv.Storage).(Storager)  - не сработает
 	if storage != nil { // если удалось
 		if KVE := storage.Set(args.Key, args.Data); KVE == nil {
 			//no error
-			reply.ErrNo = NO_ERR
+			reply.ErrNo = NoErr
 			reply.ErrDesc = ""
 		} else {
 			// error was
@@ -78,10 +78,10 @@ func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 	} else {
 		fmt.Println(kv.Storage)
 		fmt.Println(storage)
-		reply.ErrNo = SERVER_ERROR
+		reply.ErrNo = ServerError
 		reply.ErrDesc = "Server Error. Bad interface!"
 	}
-	fmt.Printf("Result %v", reply.ToString())
+	fmt.Printf("Result %v\n", reply.ToString())
 	return nil
 }
 
@@ -93,25 +93,24 @@ func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 //                error    ошибка
 func (kv *KeyValue) Get(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Get()", "may be interface cast")
-	fmt.Printf("Executing Method: %v; ARGS:%v\n", "Get", args.ToString())
+	fmt.Printf("\nExecuting Method: %v; ARGS:%v\n", "Get", args.ToString())
 	var storage Storager = &(*kv).Storage
 	if storage != nil {
 		if data, KVE := storage.Get(args.Key); KVE == nil {
 			//no error
-			reply.ErrNo = NO_ERR
+			reply.ErrNo = NoErr
 			reply.ErrDesc = ""
 			reply.Data = data
 		} else {
 			// error was
 			reply.ErrNo = KVE.ErrCode
 			reply.ErrDesc = KVE.ErrDesc
-			data = new(interface{})
 		}
 	} else {
-		reply.ErrNo = SERVER_ERROR
+		reply.ErrNo = ServerError
 		reply.ErrDesc = "Server Error. Bad interface!"
 	}
-	fmt.Printf("Result %v", reply.ToString())
+	fmt.Printf("Result %v\n", reply.ToString())
 	return nil
 }
 
@@ -123,12 +122,12 @@ func (kv *KeyValue) Get(args *Args, reply *Reply) error {
 //                error    ошибка
 func (kv *KeyValue) Delete(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Delete()", "may be interface cast")
-	fmt.Printf("Executing Method: %v; ARGS: %v\n", "Del", args.ToString())
+	fmt.Printf("\nExecuting Method: %v; ARGS: %v\n", "Del", args.ToString())
 	var storage Storager = &(*kv).Storage
 	if storage != nil {
 		if KVE := storage.Delete(args.Key); KVE == nil {
 			//no error
-			reply.ErrNo = NO_ERR
+			reply.ErrNo = NoErr
 			reply.ErrDesc = ""
 		} else {
 			// error was
@@ -136,10 +135,10 @@ func (kv *KeyValue) Delete(args *Args, reply *Reply) error {
 			reply.ErrDesc = KVE.ErrDesc
 		}
 	} else {
-		reply.ErrNo = SERVER_ERROR
+		reply.ErrNo = ServerError
 		reply.ErrDesc = "Server Error. Bad interface!"
 	}
-	fmt.Printf("Result %v", reply.ToString())
+	fmt.Printf("Result %v\n", reply.ToString())
 	return nil
 }
 
@@ -170,7 +169,7 @@ func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
 	defer recoveryFuncErr("Get()", "smth bad in s.sm.Get(key)", err)
 	var found bool
 	if data, found = s.SM.Get(key); !found {
-		return new(interface{}), &KVError{nil, NOT_FOUND_KEY, "Not found Key"}
+		return new(interface{}), &KVError{nil, NotFoundKey, "Not found Key"}
 	}
 	return
 }
@@ -205,8 +204,8 @@ func (a *Args) ToString() (s string) {
 // Pretty print Reply info
 func (r *Reply) ToString() (s string) {
 	s = fmt.Sprintf("{"+
-		"Data: %v,"+
-		"ErrCode: %v,"+
+		"Data: %v, "+
+		"ErrCode: %v, "+
 		"Description: %v}",
 		r.Data, r.ErrNo, r.ErrDesc)
 	return
