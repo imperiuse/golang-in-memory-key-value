@@ -192,8 +192,8 @@ func (sm safeMap) MultiSet(keys map[interface{}]interface{}) {
 
 // Основная функция (горутина) Диспетчер SafeMap
 func (sm safeMap) run() {
-	store := make(map[interface{}]interface{})  // хранилище
-	for command := range sm {   // бесконечный цикл, обработка команд
+	store := make(map[interface{}]interface{}) // хранилище
+	for command := range sm { // бесконечный цикл, обработка команд
 		switch command.action {
 		case set:
 			store[command.key] = command.value
@@ -237,6 +237,6 @@ func (sm safeMap) run() {
 // "Конструктор" SafeMap
 func New(bufsize int) SafeMap {
 	sm := make(safeMap, bufsize) // тип safeMap chan commandData
-	go sm.run()  // запуск горутины, которая будет в бесконечном цикле разбирать команды формир. методами SafeMap
-	return sm    // возращаем созданный экземпляр
+	go sm.run()                  // запуск горутины, которая будет в бесконечном цикле разбирать команды формир. методами SafeMap
+	return sm                    // возращаем созданный экземпляр
 }

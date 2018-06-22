@@ -169,7 +169,7 @@ func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
 	defer recoveryFuncErr("Get()", "smth bad in s.sm.Get(key)", err)
 	var found bool
 	if data, found = s.SM.Get(key); !found {
-		return new(interface{}), &KVError{nil, NotFoundKey, "Not found Key"}
+		return nil, &KVError{nil, NotFoundKey, "Not found Key"}
 	}
 	return
 }

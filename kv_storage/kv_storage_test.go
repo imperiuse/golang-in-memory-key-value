@@ -59,3 +59,107 @@ func TestVerySimpleIMKV(t *testing.T) {
 		}
 	}
 }
+
+type testPairAR struct {
+	args  Args
+	reply Reply
+}
+
+type testPairKV struct {
+	key   string
+	value interface{}
+}
+
+func TestKeyValue(t *testing.T) {
+	fmt.Printf("\nTestKeyValue\n")
+	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
+
+	tests := []testPairAR{{Args{}, Reply{}}, {Args{"key", "value"}, Reply{ErrNo: 0, Data: "value"}},
+		{Args{"1", "1"}, Reply{ErrNo: 0, Data: "1"}}, {Args{"key", nil}, Reply{ErrNo: 0, Data: nil}}}
+
+	for n, test := range tests {
+		reply := Reply{}
+		if err := KeyValueStorage.Get(&test.args, &reply); err != nil {
+			t.Errorf("Problem in %v test. In Get func (Get not exist key)", n)
+		} else {
+			if reply.ErrNo != NotFoundKey {
+				t.Errorf("Problem in %v test. In Get func (Get not exist key) ErrCode != NotFound %v", n, reply.ErrNo)
+			}
+			if reply.Data != nil {
+				t.Errorf("Problem in %v test. In Get func (Get not exist key) Data!=nil %v ", n, reply.Data)
+			}
+		}
+		if err := KeyValueStorage.Set(&test.args, &reply); err != nil {
+			t.Errorf("Problem in %v test. In Set func (Set not exist key)", n)
+		} else {
+			if reply.ErrNo != NoErr {
+				t.Errorf("Problem in %v test. In Set func (Get not exist key) ErrCode != NoErr %v", n, reply.ErrNo)
+			}
+			if reply.Data != nil {
+				t.Errorf("Problem in %v test. In Set func  Data!=nil %v ", n, reply.Data)
+			}
+		}
+		if err := KeyValueStorage.Get(&test.args, &reply); err != nil {
+			t.Errorf("Problem in %v test. In Get func (Get exist key)", n)
+		} else {
+			if reply.ErrNo != NoErr {
+				t.Errorf("Problem in %v test. In Get func (Get exist key) ErrCode != NoErr %v", n, reply.ErrNo)
+			}
+			if reply.Data != test.reply.Data {
+				t.Errorf("Problem in %v test. In Get func  Data %v!=%v  ", n, reply.Data, test.reply.Data)
+			}
+		}
+		if err := KeyValueStorage.Delete(&test.args, &reply); err != nil {
+			t.Errorf("Problem in %v test. In Delete func (Delete exist key)", n)
+		} else {
+			if reply.ErrNo != NoErr {
+				t.Errorf("Problem in %v test. In Delete func (Get exist key) ErrCode != NoErr %v", n, reply.ErrNo)
+			}
+		}
+	}
+}
+
+func TestIMKV(t *testing.T) {
+	fmt.Printf("\nTestIMKV\n")
+	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
+	Storage := KeyValueStorage.Storage
+
+	tests := []testPairKV{{"", ""}, {"", "value"}, {"1", "value"},
+		{"my_key", "value"}, {"key", new(interface{})}, {"key2", testPairKV{"1", "2"}}}
+
+	for n, test := range tests {
+		if value, PKVE := Storage.Get(test.key); PKVE == nil {
+			t.Errorf("Problem in %v test. In Get func (Get not exist key)", n)
+		} else {
+			if PKVE.ErrCode != NotFoundKey {
+				t.Errorf("ErrCode %v != NotFoundKey  ", PKVE.ErrCode)
+			}
+			if PKVE.Err != nil {
+				t.Errorf("Problem in %v test. In Get func (Get not exist key) Err: %v", n, PKVE.Err)
+			}
+			if value != nil {
+				t.Errorf("Problem in %v test. In Get func (Get not exist key) Value not nil %v", n, value)
+			}
+		}
+		if PKVE := Storage.Set(test.key, test.value); PKVE != nil {
+			t.Errorf("Problem in %v test: %v in Set func", n, PKVE.ToString())
+		}
+		if PKVE := Storage.Set(test.key, test.value); PKVE != nil {
+			t.Errorf("Problem in %v test: %v in Set func (Set exist key)", n, PKVE.ToString())
+		}
+		if value, PKVE := Storage.Get(test.key); PKVE != nil {
+			t.Errorf("Problem in %v test: %v in Get func (Get exist key)", n, PKVE.ToString())
+		} else {
+			if value != test.value {
+				t.Errorf("value get: %v!= value set: %v", value, test.value)
+			}
+		}
+		if PKVE := Storage.Delete(test.key); PKVE != nil {
+			t.Errorf("Problem in %v test: %v in Delete func (Delete exist key))", n, PKVE.ToString())
+		}
+		// Double delete
+		if PKVE := Storage.Delete(test.key); PKVE != nil {
+			t.Errorf("Problem in %v test: %v in Delete func (Delete not exist key))", n, PKVE.ToString())
+		}
+	}
+}
