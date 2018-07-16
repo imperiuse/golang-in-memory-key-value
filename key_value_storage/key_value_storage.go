@@ -99,8 +99,8 @@ func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error{
 	}else if args.Key == "mukv" {
 		kv.changeBackEnd(&MUKV{make(map[string]interface{},0), *new(sync.Mutex)})
 	}else if args.Key == "obj" { // Failed Test send obj over RPC
-		var storager Storager = args.Data.(Storager)
-		kv.changeBackEnd(storager)
+		//var storager Storager = args.Data.(Storager)
+		//kv.changeBackEnd(storager)
 	}else{
 		reply.ErrDesc = "BAD COMMAND"
 		reply.ErrNo = ServerError

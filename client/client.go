@@ -106,6 +106,7 @@ func main() {
 		case "Change":
 			method = "ChangeBackEnd"
 			args.Key = strings.Split(sliceText[1], "\n")[0]
+			//args.Data = key_value_storage.IMKV{safemap.New(1)}
 		default:
 			fmt.Printf("%vBad mathod! %v", RedColor, ResetColor)
 			continue
