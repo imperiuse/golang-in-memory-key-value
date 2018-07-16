@@ -5,6 +5,7 @@ import (
 	"../safemap"
 	"fmt"
 	"errors"
+	"sync"
 )
 
 // Структура описывающая входные параметры для перадачи в RPC server
@@ -31,7 +32,7 @@ const (
 	NoErr       = iota
 	PANIC
 	NotFoundKey
-	//ServerError
+	ServerError
 )
 
 // ErrCode
@@ -61,9 +62,9 @@ type KeyValue struct {
 //  @return
 //          KeyValue   -  ссылка на новый объект Хранилище KeyValue
 //      	error      -  признак ошибки
-func CreateKeyValueStorage(StorageBackEnd Storager) (*KeyValue, error){
-	if StorageBackEnd != nil{
-		kv := KeyValue{StorageBackEnd}
+func CreateKeyValueStorage(storageBackEnd Storager) (*KeyValue, error){
+	if storageBackEnd != nil{
+		kv := KeyValue{storageBackEnd}
 		return &kv, nil
 	}else{
 		return nil, errors.New("Nil Back-End interface")
@@ -82,6 +83,24 @@ func (kv *KeyValue) changeBackEnd(newStorageBackEnd Storager) error{
 		kv.storage = newStorageBackEnd
 	}else{
 		return errors.New("Nil Back-End interface")
+	}
+	return nil
+}
+
+// Метод смены Back-End Key Value RPC
+//  @param
+//     args       *Args   входной параметр - переданные данные запроса (key, value)
+//     reply      *Reply  выходной параметр - результат - пустая структура или errDesc опис. ошибки
+//  @return
+//     error
+func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error{
+	if args.Key == "imkv" {
+		kv.changeBackEnd(&IMKV{safemap.New(1)})
+	}else if args.Key == "mukv" {
+		kv.changeBackEnd(&MUKV{make(map[string]interface{},0), *new(sync.Mutex)})
+	}else{
+		reply.ErrDesc = "BAD COMMAND"
+		reply.ErrNo = ServerError
 	}
 	return nil
 }
@@ -165,7 +184,7 @@ type IMKV struct {
 //  @return
 //     err      *KVError   - (nil - все хорошо)
 func (s *IMKV) Set(key string, data interface{}) (err *KVError) {
-	defer recoveryFuncErr("Set()", "smth bad s.sm.Set()", err)
+	defer recoveryFuncErr("Set()", "smth bad s.Set()", err)
 	s.SafeMap.Set(key, data)
 	return nil
 }
@@ -177,7 +196,7 @@ func (s *IMKV) Set(key string, data interface{}) (err *KVError) {
 //     data     interface{}  - данные хранящиеся по ключу в случае успеха
 //     err      *KVError     - (nil - все хорошо)
 func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
-	defer recoveryFuncErr("Get()", "smth bad in s.sm.Get(key)", err)
+	defer recoveryFuncErr("Get()", "smth bad in s.Get(key)", err)
 	var found bool
 	if data, found = s.SafeMap.Get(key); !found {
 		return nil, &KVError{nil, NotFoundKey, "Not found Key"}
@@ -191,7 +210,7 @@ func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
 //  @return
 //     err      *KVError   - (nil - все хорошо)
 func (s *IMKV) Delete(key string) (err *KVError) {
-	defer recoveryFuncErr("Delete()", "smth bad in s.sm.Del(key)", err)
+	defer recoveryFuncErr("Delete()", "smth bad in s.Del(key)", err)
 	s.SafeMap.Del(key)
 	return
 }
@@ -238,5 +257,44 @@ func recoveryFunc(f string, reason string) {
 	if r := recover(); r != nil {
 		fmt.Printf("Recovery_func() in %v detect PANIC!. Reason: %v; Err: %v", f, reason, r)
 	}
+	return
+}
+
+
+// Конкретная реализация "Хранилища" : "In-memory Key-Value"
+type MUKV struct {
+	m map[string]interface{}
+	mu sync.Mutex
+}
+
+func CreateMUKV()MUKV{
+	return MUKV{make(map[string]interface{},0), *new(sync.Mutex)}
+}
+
+func (s *MUKV) Set(key string, data interface{}) (err *KVError) {
+	defer recoveryFuncErr("Set()", "smth bad s.Set()", err)
+	s.mu.Lock()
+	s.m[key] = data
+	defer s.mu.Unlock()
+	return nil
+}
+
+
+func (s *MUKV) Get(key string) (data interface{}, err *KVError) {
+	defer recoveryFuncErr("Get()", "smth bad in s.Get(key)", err)
+	s.mu.Lock()
+	var found bool
+	if data, found = s.m[key]; !found {
+		return nil, &KVError{nil, NotFoundKey, "Not found Key"}
+	}
+	defer s.mu.Unlock()
+	return
+}
+
+func (s *MUKV) Delete(key string) (err *KVError) {
+	defer recoveryFuncErr("Delete()", "smth bad in s.Del(key)", err)
+	s.mu.Lock()
+	delete(s.m, key)
+	defer s.mu.Unlock()
 	return
 }
