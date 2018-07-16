@@ -4,19 +4,19 @@
 package main
 
 import (
-	"net/rpc"
-	"net"
-	"net/rpc/jsonrpc"
-	"flag"
-	"io/ioutil"
-	"os"
-	"encoding/json"
-	"fmt"
-	"./pidfile"
-	"os/signal"
-	"syscall"
-	"./key_value_storage"
-	"./safemap"
+"net/rpc"
+"net"
+"net/rpc/jsonrpc"
+"flag"
+"io/ioutil"
+"os"
+"encoding/json"
+"fmt"
+"./pidfile"
+"os/signal"
+"syscall"
+"./key_value_storage"
+"./safemap"
 )
 
 // Красота
@@ -103,13 +103,12 @@ func main() {
 
 	// Создаем структуру "Хранилища", а также внутри вложенно инициализиурем канал SafeMap
 	var KeyValueStorage *key_value_storage.KeyValue
-	var IMKV key_value_storage.IMKV = key_value_storage.IMKV{safemap.New(1)}
-	var MUKV key_value_storage.MUKV = key_value_storage.CreateMUKV()
+	var IMKV key_value_storage.IMKV = key_value_storage.IMKV{safemap.New(1)} // Первый вариант Back-end
+	var MUKV key_value_storage.MUKV = key_value_storage.CreateMUKV(); _ = MUKV              // Второй вариант Back-end
 	if KeyValueStorage, err = key_value_storage.CreateKeyValueStorage(&IMKV); err != nil{
 		fmt.Printf("Err create Key Value Storage %v", err)
 		os.Exit(4)
 	}
-	_ = MUKV
 
 	fmt.Printf("Key-Value Storage created %v[Successful]\n%v", GreenColor, ResetColor)
 
@@ -139,4 +138,5 @@ func main() {
 			go server.ServeCodec(jsonrpc.NewServerCodec(conn)) // вызов зарегистрированного метода, который хочет клиент
 		}
 	}
+	pidfile.Remove(Settings.Pidfile)
 }

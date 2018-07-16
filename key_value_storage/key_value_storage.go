@@ -98,6 +98,9 @@ func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error{
 		kv.changeBackEnd(&IMKV{safemap.New(1)})
 	}else if args.Key == "mukv" {
 		kv.changeBackEnd(&MUKV{make(map[string]interface{},0), *new(sync.Mutex)})
+	}else if args.Key == "obj" {
+		var storager Storager = args.Data.(Storager)
+		kv.changeBackEnd(storager)
 	}else{
 		reply.ErrDesc = "BAD COMMAND"
 		reply.ErrNo = ServerError
@@ -261,7 +264,7 @@ func recoveryFunc(f string, reason string) {
 }
 
 
-// Конкретная реализация "Хранилища" : "In-memory Key-Value"
+// Конкретная реализация "Хранилища" : "Простая мапа с мьютексом"
 type MUKV struct {
 	m map[string]interface{}
 	mu sync.Mutex
