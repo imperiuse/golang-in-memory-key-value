@@ -28,7 +28,7 @@ func hellowText() {
 
 // Текст помощи, команда help
 func helpText() {
-	fmt.Printf("Availible command: %vSet, %vGet, %vDelete%v!\n", GreenColor, BlueColor, RedColor, ResetColor)
+	fmt.Printf("Availible command: %vSet, %vGet, %vDelete%v, %vChange{imkv, mukv}%v!\n", GreenColor, BlueColor, RedColor, YellowColor, ResetColor)
 	fmt.Printf("Use the following syntax:%v METHOD_NAME[SPACE]ARG1[SPACE]ARG2 %v\n", GreenColor, ResetColor)
 	fmt.Printf("Example: %vget key1%v", BlueColor, ResetColor)
 }
@@ -102,7 +102,8 @@ func main() {
 		case "delete":
 			method = strings.ToUpper(string(sliceText[0][0])) + sliceText[0][1:] // делаем первую букву большой
 			args.Key = strings.Split(sliceText[1], "\n")[0]                      // убираем символ \n
-		case "change":
+		case "change": fallthrough
+		case "Change":
 			method = "ChangeBackEnd"
 			args.Key = strings.Split(sliceText[1], "\n")[0]
 		default:
