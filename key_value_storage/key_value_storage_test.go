@@ -1,4 +1,4 @@
-package kv_storage
+package key_value_storage
 
 import (
 	"testing"
@@ -8,8 +8,8 @@ import (
 
 func TestVerySimpleAbstractKV(t *testing.T) {
 	fmt.Printf("\nTestVerySimpleAbstractKV\n")
-	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
-	pArgs := &Args{Key: "key", Data: "value"}
+	KeyValueStorage, _ := CreateKeyValueStorage(&(IMKV{safemap.New(1)}))
+		pArgs := &Args{Key: "key", Data: "value"}
 	pReply := &Reply{}
 
 	if err := KeyValueStorage.Set(pArgs, pReply); err != nil {
@@ -36,22 +36,22 @@ func TestVerySimpleAbstractKV(t *testing.T) {
 
 func TestVerySimpleIMKV(t *testing.T) {
 	fmt.Printf("\nTestVerySimpleIMKV\n")
-	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
+	Storage := IMKV{safemap.New(1)}
 
-	if PKVE := KeyValueStorage.Storage.Set("key", "value"); PKVE != nil {
+	if PKVE := Storage.Set("key", "value"); PKVE != nil {
 		t.Errorf("Error not nil! %v", PKVE.ToString())
 	}
-	if value, PKVE := KeyValueStorage.Storage.Get("key"); PKVE != nil {
+	if value, PKVE := Storage.Get("key"); PKVE != nil {
 		t.Errorf("Error not nil! %v", PKVE.ToString())
 	} else {
 		if value != "value" {
 			t.Errorf("Error test value != 'value'! %v", value)
 		}
 	}
-	if PKVE := KeyValueStorage.Storage.Delete("key"); PKVE != nil {
+	if PKVE := Storage.Delete("key"); PKVE != nil {
 		t.Errorf("Error not nil! %v", PKVE.ToString())
 	}
-	if _, PKVE := KeyValueStorage.Storage.Get("key"); PKVE == nil {
+	if _, PKVE := Storage.Get("key"); PKVE == nil {
 		t.Errorf("Not err about Not Found Key!")
 	} else {
 		if PKVE.ErrCode != NotFoundKey {
@@ -72,7 +72,7 @@ type testPairKV struct {
 
 func TestKeyValue(t *testing.T) {
 	fmt.Printf("\nTestKeyValue\n")
-	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
+	KeyValueStorage, _ := CreateKeyValueStorage(&(IMKV{safemap.New(1)}))
 
 	tests := []testPairAR{{Args{}, Reply{}}, {Args{"key", "value"}, Reply{ErrNo: 0, Data: "value"}},
 		{Args{"1", "1"}, Reply{ErrNo: 0, Data: "1"}}, {Args{"key", nil}, Reply{ErrNo: 0, Data: nil}}}
@@ -121,8 +121,7 @@ func TestKeyValue(t *testing.T) {
 
 func TestIMKV(t *testing.T) {
 	fmt.Printf("\nTestIMKV\n")
-	KeyValueStorage := KeyValue{Storage: IMKV{SM: safemap.New(1)}}
-	Storage := KeyValueStorage.Storage
+	Storage := IMKV{safemap.New(1)}
 
 	tests := []testPairKV{{"", ""}, {"", "value"}, {"1", "value"},
 		{"my_key", "value"}, {"key", new(interface{})}, {"key2", testPairKV{"1", "2"}}}

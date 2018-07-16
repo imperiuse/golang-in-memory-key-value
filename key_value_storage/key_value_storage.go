@@ -1,4 +1,4 @@
-package kv_storage
+package key_value_storage
 
 // Собственная реализация Безопасной Map
 import (
@@ -31,7 +31,7 @@ const (
 	NoErr       = iota
 	PANIC
 	NotFoundKey
-	ServerError
+	//ServerError
 )
 
 // ErrCode
@@ -52,7 +52,44 @@ type Storager interface {
 
 // Главный тип структура Хранилище Ключ-Значение, содержит в себе конкретную реализацию хранилища, удовлетв. интерфейсу. Storager
 type KeyValue struct {
-	Storage IMKV // or DBKV or Other which implements Storager Interface ( so have methods Set(key, value), Get(key), Delete(key))
+	storage Storager // Storager it's Interface ( so have methods Set(key, value), Get(key), Delete(key))
+}
+
+// Конструктор
+//  @param
+//		    StorageBackEnd     interface{}   - "back-end" должен удовлетворять интерфесу Storager
+//  @return
+//          KeyValue   -  ссылка на новый объект Хранилище KeyValue
+//      	error      -  признак ошибки
+func CreateKeyValueStorage(StorageBackEnd Storager) (*KeyValue, error){
+	if StorageBackEnd != nil{
+		kv := KeyValue{StorageBackEnd}
+		return &kv, nil
+	}else{
+		return nil, errors.New("Nil Back-End interface")
+	}
+	return nil, nil
+}
+
+
+// Метод смены Back-End Key Value
+//  @param
+//		    storageInterface     interface{}   - новый "back-end" должен удовлетворять интерфесу Storager
+//  @return
+//      	error  -  признак ошибки
+func (kv *KeyValue) changeBackEnd(newStorageBackEnd Storager) error{
+	if newStorageBackEnd != nil{
+		kv.storage = newStorageBackEnd
+		//if storage, ok := newStorageBackEnd.(Storager); ok{
+		//	kv.storage = storage
+		//	return nil
+		//}else {
+		//	return errors.New("Can't interface convertation to Storager!")
+		//}
+	}else{
+		return errors.New("Nil Back-End interface")
+	}
+	return nil
 }
 
 // Метод записи новой записи типа ключ-значение в хранилище, возращает ошибку
@@ -64,22 +101,14 @@ type KeyValue struct {
 func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Set()", "may be interface cast")
 	fmt.Printf("\nExecuting Method: %v; ARGS: %v\n", "Set", args.ToString())
-	var storage Storager = &(*kv).Storage // косвеннно пытаемся пивести к нужному нам интерфейсу,  прямо (*kv.Storage).(Storager)  - не сработает
-	if storage != nil { // если удалось
-		if KVE := storage.Set(args.Key, args.Data); KVE == nil {
-			//no error
-			reply.ErrNo = NoErr
-			reply.ErrDesc = ""
-		} else {
-			// error was
-			reply.ErrNo = KVE.ErrCode
-			reply.ErrDesc = KVE.ErrDesc
-		}
+	if KVE := kv.storage.Set(args.Key, args.Data); KVE == nil {
+		//no error
+		reply.ErrNo = NoErr
+		reply.ErrDesc = ""
 	} else {
-		fmt.Println(kv.Storage)
-		fmt.Println(storage)
-		reply.ErrNo = ServerError
-		reply.ErrDesc = "Server Error. Bad interface!"
+		// error was
+		reply.ErrNo = KVE.ErrCode
+		reply.ErrDesc = KVE.ErrDesc
 	}
 	fmt.Printf("Result %v\n", reply.ToString())
 	return nil
@@ -94,21 +123,15 @@ func (kv *KeyValue) Set(args *Args, reply *Reply) error {
 func (kv *KeyValue) Get(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Get()", "may be interface cast")
 	fmt.Printf("\nExecuting Method: %v; ARGS:%v\n", "Get", args.ToString())
-	var storage Storager = &(*kv).Storage
-	if storage != nil {
-		if data, KVE := storage.Get(args.Key); KVE == nil {
-			//no error
-			reply.ErrNo = NoErr
-			reply.ErrDesc = ""
-			reply.Data = data
-		} else {
-			// error was
-			reply.ErrNo = KVE.ErrCode
-			reply.ErrDesc = KVE.ErrDesc
-		}
+	if data, KVE := kv.storage.Get(args.Key); KVE == nil {
+		//no error
+		reply.ErrNo = NoErr
+		reply.ErrDesc = ""
+		reply.Data = data
 	} else {
-		reply.ErrNo = ServerError
-		reply.ErrDesc = "Server Error. Bad interface!"
+		// error was
+		reply.ErrNo = KVE.ErrCode
+		reply.ErrDesc = KVE.ErrDesc
 	}
 	fmt.Printf("Result %v\n", reply.ToString())
 	return nil
@@ -123,20 +146,14 @@ func (kv *KeyValue) Get(args *Args, reply *Reply) error {
 func (kv *KeyValue) Delete(args *Args, reply *Reply) error {
 	defer recoveryFunc("(*KeyValue) Delete()", "may be interface cast")
 	fmt.Printf("\nExecuting Method: %v; ARGS: %v\n", "Del", args.ToString())
-	var storage Storager = &(*kv).Storage
-	if storage != nil {
-		if KVE := storage.Delete(args.Key); KVE == nil {
-			//no error
-			reply.ErrNo = NoErr
-			reply.ErrDesc = ""
-		} else {
-			// error was
-			reply.ErrNo = KVE.ErrCode
-			reply.ErrDesc = KVE.ErrDesc
-		}
+	if KVE := kv.storage.Delete(args.Key); KVE == nil {
+		//no error
+		reply.ErrNo = NoErr
+		reply.ErrDesc = ""
 	} else {
-		reply.ErrNo = ServerError
-		reply.ErrDesc = "Server Error. Bad interface!"
+		// error was
+		reply.ErrNo = KVE.ErrCode
+		reply.ErrDesc = KVE.ErrDesc
 	}
 	fmt.Printf("Result %v\n", reply.ToString())
 	return nil
@@ -144,7 +161,7 @@ func (kv *KeyValue) Delete(args *Args, reply *Reply) error {
 
 // Конкретная реализация "Хранилища" : "In-memory Key-Value"
 type IMKV struct {
-	SM safemap.SafeMap // safe map
+	safemap.SafeMap // safe map
 }
 
 // Метод запись новой пары ключ-значение, возращает указатель на структуру ошибки
@@ -155,7 +172,7 @@ type IMKV struct {
 //     err      *KVError   - (nil - все хорошо)
 func (s *IMKV) Set(key string, data interface{}) (err *KVError) {
 	defer recoveryFuncErr("Set()", "smth bad s.sm.Set()", err)
-	s.SM.Set(key, data)
+	s.SafeMap.Set(key, data)
 	return nil
 }
 
@@ -168,7 +185,7 @@ func (s *IMKV) Set(key string, data interface{}) (err *KVError) {
 func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
 	defer recoveryFuncErr("Get()", "smth bad in s.sm.Get(key)", err)
 	var found bool
-	if data, found = s.SM.Get(key); !found {
+	if data, found = s.SafeMap.Get(key); !found {
 		return nil, &KVError{nil, NotFoundKey, "Not found Key"}
 	}
 	return
@@ -181,7 +198,7 @@ func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
 //     err      *KVError   - (nil - все хорошо)
 func (s *IMKV) Delete(key string) (err *KVError) {
 	defer recoveryFuncErr("Delete()", "smth bad in s.sm.Del(key)", err)
-	s.SM.Del(key)
+	s.SafeMap.Del(key)
 	return
 }
 

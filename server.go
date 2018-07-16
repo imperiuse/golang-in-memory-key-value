@@ -7,8 +7,6 @@ import (
 	"net/rpc"
 	"net"
 	"net/rpc/jsonrpc"
-	"./kv_storage"
-	"./safemap"
 	"flag"
 	"io/ioutil"
 	"os"
@@ -17,6 +15,8 @@ import (
 	"./pidfile"
 	"os/signal"
 	"syscall"
+	"./key_value_storage"
+	"./safemap"
 )
 
 // Красота
@@ -102,13 +102,17 @@ func main() {
 	defer pidfile.Remove(Settings.Pidfile)
 
 	// Создаем структуру "Хранилища", а также внутри вложенно инициализиурем канал SafeMap
-	KeyValueStorage := kv_storage.KeyValue{Storage: kv_storage.IMKV{SM: safemap.New(1)}}
+	var KeyValueStorage *key_value_storage.KeyValue
+	if KeyValueStorage, err = key_value_storage.CreateKeyValueStorage(&(key_value_storage.IMKV{safemap.New(1)})); err != nil{
+		fmt.Printf("Err create Key Value Storage %v", err)
+		os.Exit(4)
+	}
 
 	fmt.Printf("Key-Value Storage created %v[Successful]\n%v", GreenColor, ResetColor)
 
 	// Создаем новый экземпляр RPC сервера
 	server := rpc.NewServer()
-	server.Register(&KeyValueStorage) // Регистрация методов (все методы структуры экзмеляра KeyValueStorage)
+	server.Register(KeyValueStorage) // Регистрация методов (все методы структуры экзмеляра KeyValueStorage)
 	server.HandleHTTP(rpc.DefaultRPCPath, rpc.DefaultDebugPath)
 	// Вешаем лисенера
 	listener, err := net.Listen("tcp", fmt.Sprintf("%v:%v", Settings.Addr, Settings.Port))

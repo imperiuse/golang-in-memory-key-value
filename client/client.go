@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/rpc/jsonrpc"
-	"../kv_storage"
+	"../key_value_storage"
 	"flag"
 	"os"
 	"bufio"
@@ -48,8 +48,8 @@ func main() {
 
 	// Создаем новый экземпляр клиент JSON-RPC
 	RpcClient := jsonrpc.NewClient(client)
-	var reply kv_storage.Reply // для результатов (ответов)
-	var args kv_storage.Args   // для передачи параметров
+	var reply key_value_storage.Reply // для результатов (ответов)
+	var args key_value_storage.Args   // для передачи параметров
 
 	hellowText()
 	helpText()
@@ -84,7 +84,7 @@ func main() {
 
 		// Предварительное создание арщументов для RPC клиента
 		method := ""
-		args = kv_storage.Args{}
+		args = key_value_storage.Args{}
 
 		// Анализ метода
 		switch sliceText[0] {
