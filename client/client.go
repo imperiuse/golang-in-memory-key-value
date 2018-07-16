@@ -28,7 +28,7 @@ func hellowText() {
 
 // Текст помощи, команда help
 func helpText() {
-	fmt.Printf("Availible command: %vSet, %vGet, %vDelete%v, %vChange{imkv, mukv}%v!\n", GreenColor, BlueColor, RedColor, YellowColor, ResetColor)
+	fmt.Printf("Availible command: %vSet, %vGet, %vDelete, %vChange{imkv, mukv}%v!\n", GreenColor, BlueColor, RedColor, YellowColor, ResetColor)
 	fmt.Printf("Use the following syntax:%v METHOD_NAME[SPACE]ARG1[SPACE]ARG2 %v\n", GreenColor, ResetColor)
 	fmt.Printf("Example: %vget key1%v", BlueColor, ResetColor)
 }
