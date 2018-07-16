@@ -80,12 +80,6 @@ func CreateKeyValueStorage(StorageBackEnd Storager) (*KeyValue, error){
 func (kv *KeyValue) changeBackEnd(newStorageBackEnd Storager) error{
 	if newStorageBackEnd != nil{
 		kv.storage = newStorageBackEnd
-		//if storage, ok := newStorageBackEnd.(Storager); ok{
-		//	kv.storage = storage
-		//	return nil
-		//}else {
-		//	return errors.New("Can't interface convertation to Storager!")
-		//}
 	}else{
 		return errors.New("Nil Back-End interface")
 	}

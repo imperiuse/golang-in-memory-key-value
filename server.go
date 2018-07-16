@@ -103,7 +103,8 @@ func main() {
 
 	// Создаем структуру "Хранилища", а также внутри вложенно инициализиурем канал SafeMap
 	var KeyValueStorage *key_value_storage.KeyValue
-	if KeyValueStorage, err = key_value_storage.CreateKeyValueStorage(&(key_value_storage.IMKV{safemap.New(1)})); err != nil{
+	var IMKV key_value_storage.IMKV = key_value_storage.IMKV{safemap.New(1)}
+	if KeyValueStorage, err = key_value_storage.CreateKeyValueStorage(&IMKV); err != nil{
 		fmt.Printf("Err create Key Value Storage %v", err)
 		os.Exit(4)
 	}
