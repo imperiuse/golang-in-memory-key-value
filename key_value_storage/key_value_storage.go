@@ -97,7 +97,7 @@ func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error{
 	if args.Key == "imkv" {
 		kv.changeBackEnd(&IMKV{safemap.New(1)})
 	}else if args.Key == "mukv" {
-		kv.changeBackEnd(&MUKV{make(map[string]interface{},0), *new(sync.Mutex)})
+		kv.changeBackEnd(&MUKV{make(map[string]interface{},0), *new(sync.RWMutex)})
 	}else if args.Key == "obj" { // Failed Test send obj over RPC
 		//var storager Storager = args.Data.(Storager)
 		//kv.changeBackEnd(storager)
@@ -267,37 +267,34 @@ func recoveryFunc(f string, reason string) {
 // Конкретная реализация "Хранилища" : "Простая мапа с мьютексом"
 type MUKV struct {
 	m map[string]interface{}
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
 func CreateMUKV()MUKV{
-	return MUKV{make(map[string]interface{},0), *new(sync.Mutex)}
+	return MUKV{make(map[string]interface{},0), *new(sync.RWMutex)}
 }
 
 func (s *MUKV) Set(key string, data interface{}) (err *KVError) {
-	defer recoveryFuncErr("Set()", "smth bad s.Set()", err)
 	s.mu.Lock()
 	s.m[key] = data
-	defer s.mu.Unlock()
+	s.mu.Unlock()
 	return nil
 }
 
 
 func (s *MUKV) Get(key string) (data interface{}, err *KVError) {
-	defer recoveryFuncErr("Get()", "smth bad in s.Get(key)", err)
-	s.mu.Lock()
+	s.mu.RLock()
 	var found bool
 	if data, found = s.m[key]; !found {
 		return nil, &KVError{nil, NotFoundKey, "Not found Key"}
 	}
-	defer s.mu.Unlock()
+	s.mu.RUnlock()
 	return
 }
 
 func (s *MUKV) Delete(key string) (err *KVError) {
-	defer recoveryFuncErr("Delete()", "smth bad in s.Del(key)", err)
 	s.mu.Lock()
 	delete(s.m, key)
-	defer s.mu.Unlock()
+	s.mu.Unlock()
 	return
 }
