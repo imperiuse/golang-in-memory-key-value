@@ -97,7 +97,7 @@ func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error{
 	if args.Key == "imkv" {
 		kv.changeBackEnd(&IMKV{safemap.New(1)})
 	}else if args.Key == "mukv" {
-		kv.changeBackEnd(&MUKV{make(map[string]interface{},0), *new(sync.RWMutex)})
+		kv.changeBackEnd(&MUKV{m: make(map[string]interface{},0), mu: *new(sync.RWMutex)})
 	}else if args.Key == "obj" { // Failed Test send obj over RPC
 		//var storager Storager = args.Data.(Storager)
 		//kv.changeBackEnd(storager)
@@ -180,7 +180,7 @@ type IMKV struct {
 	safemap.SafeMap // safe map
 }
 
-// Метод запись новой пары ключ-значение, возращает указатель на структуру ошибки
+// Метод для записи новой пары ключ-значение, возращает указатель на структуру ошибки
 //  @param
 //     key       string     входной параметр - ключ
 //     value     interface  входной параметр - значение
@@ -192,7 +192,7 @@ func (s *IMKV) Set(key string, data interface{}) (err *KVError) {
 	return nil
 }
 
-// Метод запись получение значение, возращает значение и указатель на структуру ошибки
+// Метод получения значение, возращает значение и указатель на структуру ошибки
 //  @param
 //     key       string     входной параметр - ключ
 //  @return
@@ -207,7 +207,7 @@ func (s *IMKV) Get(key string) (data interface{}, err *KVError) {
 	return
 }
 
-// Метод запись удаление пары ключ-значение, возращает указатель на структуру ошибки
+// Метод для удаление пары ключ-значение, возращает указатель на структуру ошибки
 //  @param
 //     key       string     входной параметр - ключ
 //  @return
@@ -264,16 +264,24 @@ func recoveryFunc(f string, reason string) {
 }
 
 
-// Конкретная реализация "Хранилища" : "Простая мапа с мьютексом"
+// Конкретная реализация "Хранилища" : "Simple Map with Mutex"
 type MUKV struct {
-	m map[string]interface{}
 	mu sync.RWMutex
+	m map[string]interface{}  // This map under Mutex
 }
 
+// Конструктор "Simple Map with Mutex"
+// @ return
+//           MUKV   struct  - Конкретная реализация "Хранилища" : "Simple Map with Mutex"
 func CreateMUKV()MUKV{
-	return MUKV{make(map[string]interface{},0), *new(sync.RWMutex)}
+	return MUKV{mu: *new(sync.RWMutex), m: make(map[string]interface{},0)}
 }
 
+// Метод для записи пары ключ-значение, возращает указатель на структуру ошибки
+//  @param
+//     key       string     входной параметр - ключ
+//  @return
+//     err      *KVError   - (nil - все хорошо)
 func (s *MUKV) Set(key string, data interface{}) (err *KVError) {
 	s.mu.Lock()
 	s.m[key] = data
@@ -281,7 +289,12 @@ func (s *MUKV) Set(key string, data interface{}) (err *KVError) {
 	return nil
 }
 
-
+// Метод для получения значения по ключу, возращает значение и указатель на структуру ошибки
+//  @param
+//     key       string     входной параметр - ключ
+//  @return
+//     data     interface{}  - значение (данные) по ключу
+//     err      *KVError     - (nil - все хорошо)
 func (s *MUKV) Get(key string) (data interface{}, err *KVError) {
 	s.mu.RLock()
 	var found bool
@@ -292,6 +305,11 @@ func (s *MUKV) Get(key string) (data interface{}, err *KVError) {
 	return
 }
 
+// Метод для удаление пары ключ-значение, возращает указатель на структуру ошибки
+//  @param
+//     key       string     входной параметр - ключ
+//  @return
+//     err      *KVError   - (nil - все хорошо)
 func (s *MUKV) Delete(key string) (err *KVError) {
 	s.mu.Lock()
 	delete(s.m, key)
