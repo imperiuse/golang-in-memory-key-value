@@ -299,6 +299,7 @@ func (s *MUKV) Get(key string) (data interface{}, err *KVError) {
 	s.mu.RLock()
 	var found bool
 	if data, found = s.m[key]; !found {
+		s.mu.RUnlock()
 		return nil, &KVError{nil, NotFoundKey, "Not found Key"}
 	}
 	s.mu.RUnlock()
