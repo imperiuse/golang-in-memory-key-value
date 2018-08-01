@@ -102,7 +102,8 @@ func main() {
 		case "delete":
 			method = strings.ToUpper(string(sliceText[0][0])) + sliceText[0][1:] // делаем первую букву большой
 			args.Key = strings.Split(sliceText[1], "\n")[0]                      // убираем символ \n
-		case "change": fallthrough
+		case "change":
+			fallthrough
 		case "Change":
 			method = "ChangeBackEnd"
 			args.Key = strings.Split(sliceText[1], "\n")[0]

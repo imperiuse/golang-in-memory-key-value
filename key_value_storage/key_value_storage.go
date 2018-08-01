@@ -2,10 +2,10 @@ package key_value_storage
 
 // Собственная реализация Безопасной Map
 import (
-	"../safemap"
 	"fmt"
 	"errors"
 	"sync"
+	"github.com/golang_lib/safemap"
 )
 
 // Структура описывающая входные параметры для перадачи в RPC server
@@ -29,7 +29,7 @@ type KVError struct {
 }
 
 const (
-	NoErr       = iota
+	NoErr = iota
 	PANIC
 	NotFoundKey
 	ServerError
@@ -62,26 +62,25 @@ type KeyValue struct {
 //  @return
 //          KeyValue   -  ссылка на новый объект Хранилище KeyValue
 //      	error      -  признак ошибки
-func CreateKeyValueStorage(storageBackEnd Storager) (*KeyValue, error){
-	if storageBackEnd != nil{
+func CreateKeyValueStorage(storageBackEnd Storager) (*KeyValue, error) {
+	if storageBackEnd != nil {
 		kv := KeyValue{storageBackEnd}
 		return &kv, nil
-	}else{
+	} else {
 		return nil, errors.New("Nil Back-End interface")
 	}
 	return nil, nil
 }
-
 
 // Метод смены Back-End Key Value
 //  @param
 //		    storageInterface     interface{}   - новый "back-end" должен удовлетворять интерфесу Storager
 //  @return
 //      	error  -  признак ошибки
-func (kv *KeyValue) changeBackEnd(newStorageBackEnd Storager) error{
-	if newStorageBackEnd != nil{
+func (kv *KeyValue) changeBackEnd(newStorageBackEnd Storager) error {
+	if newStorageBackEnd != nil {
 		kv.storage = newStorageBackEnd
-	}else{
+	} else {
 		return errors.New("Nil Back-End interface")
 	}
 	return nil
@@ -93,15 +92,15 @@ func (kv *KeyValue) changeBackEnd(newStorageBackEnd Storager) error{
 //     reply      *Reply  выходной параметр - результат - пустая структура или errDesc опис. ошибки
 //  @return
 //     error
-func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error{
+func (kv *KeyValue) ChangeBackEnd(args *Args, reply *Reply) error {
 	if args.Key == "imkv" {
 		kv.changeBackEnd(&IMKV{safemap.New(1)})
-	}else if args.Key == "mukv" {
-		kv.changeBackEnd(&MUKV{m: make(map[string]interface{},0), mu: *new(sync.RWMutex)})
-	}else if args.Key == "obj" { // Failed Test send obj over RPC
+	} else if args.Key == "mukv" {
+		kv.changeBackEnd(&MUKV{m: make(map[string]interface{}, 0), mu: *new(sync.RWMutex)})
+	} else if args.Key == "obj" { // Failed Test send obj over RPC
 		//var storager Storager = args.Data.(Storager)
 		//kv.changeBackEnd(storager)
-	}else{
+	} else {
 		reply.ErrDesc = "BAD COMMAND"
 		reply.ErrNo = ServerError
 	}
@@ -263,18 +262,17 @@ func recoveryFunc(f string, reason string) {
 	return
 }
 
-
 // Конкретная реализация "Хранилища" : "Simple Map with Mutex"
 type MUKV struct {
 	mu sync.RWMutex
-	m map[string]interface{}  // This map under Mutex
+	m  map[string]interface{} // This map under Mutex
 }
 
 // Конструктор "Simple Map with Mutex"
 // @ return
 //           MUKV   struct  - Конкретная реализация "Хранилища" : "Simple Map with Mutex"
-func CreateMUKV()MUKV{
-	return MUKV{mu: *new(sync.RWMutex), m: make(map[string]interface{},0)}
+func CreateMUKV() MUKV {
+	return MUKV{mu: *new(sync.RWMutex), m: make(map[string]interface{}, 0)}
 }
 
 // Метод для записи пары ключ-значение, возращает указатель на структуру ошибки

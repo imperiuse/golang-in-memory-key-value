@@ -1,42 +1,46 @@
 # golang-in-memory-key-value
-Test task
 
+Develop infrastructures:
 
-Инфраструктура разработки:
+    OS:    Ubunta 18.04 LTS & Ubunta Server 16.10 LTS (own administration server)
+    Lang:  go 1.10.3 linux/amd64
+    IDE:   Goland 2018.2 / VSCode
 
-    OS: Ubunta 16.04 LTS & Ubunta Server 16.10 LTS (личный администрируемый сервер)
-    Lang: go 1.10.3 linux/amd64
-    IDE:  Goland 2018.1
-
-Стандартная библиотеки:
+Standard Library used:
 
     net
     net/rpc
     net/rpc/jsonrpc
     json
 
-Собственные мини-библиотеки:
+Custom library used:
 
-    safemap
-    pidfile
+    "github.com/imperiuse/golang_lib"
+
+    "./safemap"
+    "./pidfile"
 
 # Server start
 
-    go build
-    ./server
+    go build && ./server
 
-Примечания:
-Настройки сервера лежат в `settings.json`
-Путь к нему можно указать с помощью флага path, по-умолчанию путь `./setting.json`
+Some addition server info:
 
-# Start client
+Server's settings here: `settings.json`
+You can choose own settings file by flag -json  ` -json ./setting.json`
+
+Default server port: `9008`
+
+
+# Command to start client:
 
     cd client
-    go build
-    ./client
+    go build && ./client
 
-Примечания:
-Настройки клиента: адресс и порт сервера куда подключаться можно задать через флаги `addr`, `port`
-По умолчанию клиент и сервер настроены для быстрого и удобного запуска на одной машине, порт по-умолчанию 9008, адрес естесвенно localhost
+Default destinations addr:port:  `localhost:9008`
+
+Some addition client info:
+You can choose own Addr and port setting by flags: `addr` and `port`
+
 
 

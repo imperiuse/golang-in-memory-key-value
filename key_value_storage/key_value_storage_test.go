@@ -2,14 +2,14 @@ package key_value_storage
 
 import (
 	"testing"
-	"../safemap"
+	"github.com/golang_lib/safemap"
 	"fmt"
 )
 
 func TestVerySimpleAbstractKV(t *testing.T) {
 	fmt.Printf("\nTestVerySimpleAbstractKV\n")
 	KeyValueStorage, _ := CreateKeyValueStorage(&(IMKV{safemap.New(1)}))
-		pArgs := &Args{Key: "key", Data: "value"}
+	pArgs := &Args{Key: "key", Data: "value"}
 	pReply := &Reply{}
 
 	if err := KeyValueStorage.Set(pArgs, pReply); err != nil {
