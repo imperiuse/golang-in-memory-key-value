@@ -2,7 +2,7 @@
 
 ### Develop infrastructures:
 
-    OS:    Ubunta 18.04 LTS & Ubunta Server 16.10 LTS (own administration server)
+    OS:    Ubunta 18.04 LTS & Ubunta Server 18.04 LTS
     Lang:  go 1.10.3 linux/amd64
     IDE:   Goland 2018.2 / VSCode
 
